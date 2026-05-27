@@ -16,18 +16,18 @@ pipeline {
                 script {
                     def opciones = env.DEPLOY_OPTS.split(',')
 
-                    def respuesta = input(
-                        message: "¿Deseas continuar con el despliegue?",
-                        submitterParameter: env.DEPLOY_NAME,
-                        parameters: [
-                            choice(
-                                name: env.DEPLOY_NAME,
-                                //choices: opciones.join('\n'),
-                                choices: "dev\nstaging\nprod",
-                                description: "Selecciona opción"
-                            )
-                        ]
-                    )
+                    timeout(time: 5, unit: 'MINUTES') {
+                        def respuesta = input(
+                            message: "¿Deseas continuar con el despliegue?",
+                            parameters: [
+                                choice(
+                                    name: env.DEPLOY_NAME,
+                                    choices: opciones.join('\n'),
+                                    description: "Selecciona opción"
+                                )
+                            ]
+                        )
+                    }
 
                     switch (respuesta) {
                         case opciones[0]:
