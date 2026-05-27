@@ -18,6 +18,7 @@ pipeline {
 
                     def respuesta = input(
                         message: "¿Deseas continuar con el despliegue?",
+                        submitterParameter: env.DEPLOY_NAME,
                         parameters: [
                             choice(
                                 name: env.DEPLOY_NAME,
