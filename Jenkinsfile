@@ -17,10 +17,10 @@ pipeline {
                     def opciones = env.DEPLOY_OPTS.split(',')
 
                     def respuesta = input(
-                        message: "¿Desplegar en producción?",
+                        message: "¿Deseas continuar con el despliegue?",
                         parameters: [
                             choice(
-                                name: $env.DEPLOY_NAME,
+                                name: env.DEPLOY_NAME,
                                 choices: opciones.join('\n'),
                                 description: "Selecciona opción"
                             )
