@@ -4,8 +4,8 @@ pipeline {
     stages {
         stage('Imprimir comando') {
             steps {
-                echo "Este es un mensaje desde el Jenkinsfile"
-                sh 'echo "Ejecutando comando dentro del pipeline"'
+                echo "\033[1;34mEste es un mensaje desde el Jenkinsfile\033[0m"
+                sh 'echo -e "\\033[1;34mEjecutando comando dentro del pipeline\\033[0m"'
             }
         }
     }
