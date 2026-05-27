@@ -22,7 +22,8 @@ pipeline {
                         parameters: [
                             choice(
                                 name: env.DEPLOY_NAME,
-                                choices: opciones.join('\n'),
+                                //choices: opciones.join('\n'),
+                                choices: "dev\nstaging\nprod",
                                 description: "Selecciona opción"
                             )
                         ]
