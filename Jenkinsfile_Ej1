@@ -14,8 +14,7 @@ pipeline {
     }
 
     environment {
-        DEPLOY_NAME = 'DECISION'
-        DEPLOY_OPTS = "dev,staging,prod"
+        WORK_DIR = "dist"
         CONFIG_FILE = "config.txt"
     }
 
@@ -25,30 +24,45 @@ pipeline {
                 deleteDir()
                 checkout scm
                 echo "\033[1;34mBRANCH_NAME = ${GIT_BRANCH}\033[0m"
+                sh "rm -rf ${env.WORK_DIR}"
+                sh "mkdir -p ${env.WORK_DIR}"
+                echo "\033[1;33mDirectorio limpio: ${env.WORK_DIR}\033[0m"
             }
         }
 
         stage('Generar fichero') {
             steps {
                 echo "\033[1;34mGenerar fichero saludo.txt\033[0m"
-                sh 'echo "Hola Jenkins" > saludo.txt'
+                sh "echo 'Hola Jenkins' > ${env.WORK_DIR}/saludo.txt"
             }
         }
 
         stage('Mostrar contenido') {
             steps {
                 echo "\033[1;34mGenerar fichero datos.txt\033[0m"
-                sh 'echo "Contenido de datos.txt" > datos.txt'
+                sh "echo 'Contenido de datos.txt' > ${env.WORK_DIR}/datos.txt"
                 echo "\033[1;34mMostrar contenido de datos.txt\033[0m"
-                sh 'cat datos.txt'
+                sh """
+                    echo -e "\\033[1m\$(cat ${env.WORK_DIR}/datos.txt)\\033[0m"
+                """
             }
         }
         
         stage('Borrar fichero') {
             steps {
-                sh 'rm datos.txt'
+                script {
+                    def ruta = "${env.WORK_DIR}/datos.txt"
+
+                    if (fileExists(ruta)) {
+                        echo "\033[1;33mBorrando ${ruta}\033[0m"
+                        sh "rm ${ruta}"
+                    } else {
+                        echo "\033[1;31mEl archivo ${ruta} NO existe\033[0m"
+                    }
+                }
             }
         }
+
 
         stage('Obtener usuario') {
             steps {
@@ -56,18 +70,20 @@ pipeline {
                     env.NAME = sh(script: 'whoami', returnStdout: true).trim()
                 }
                 echo "\033[1;34mNombre de usuario obtenido: ${env.NAME}\033[0m"
-                sh 'echo "$env.NAME" > nombre.txt'
+                sh "echo '$env.NAME' > ${env.WORK_DIR}/nombre.txt"
             }
         }
 
         stage('Listar workspace') {
             steps {
-                sh '''
-                    echo "Archivo uno" > uno.txt
-                    echo "Archivo dos" > dos.txt
-                    echo "Archivo tres" > tres.txt
-                    ls -l
-                '''
+                sh """
+                    echo "Archivo uno" > ${env.WORK_DIR}/uno.txt
+                    echo "Archivo dos" > ${env.WORK_DIR}/dos.txt
+                    echo "Archivo tres" > ${env.WORK_DIR}/tres.txt
+                """
+
+                echo "\033[1;34mListar archivos generados\033[0m"
+                sh "ls -l ${env.WORK_DIR}"
             }
         }
 
@@ -77,7 +93,7 @@ pipeline {
                 expression { env.GIT_BRANCH ==~ /.*main$/ }
             }
             steps {
-                echo "\033[1;34mDEPLOY ejecutado con rama main\033[0m"
+                echo "\033[1;35mDEPLOY ejecutado con rama main\033[0m"
                 sh "echo \"Contenido de ${env.CONFIG_FILE}\" > ${env.CONFIG_FILE}"
             }
         }
@@ -87,7 +103,7 @@ pipeline {
                 expression { params.BORRAR_ARCHIVOS == true }
             }
             steps {
-                sh 'rm -f *.txt'
+                sh "rm -f ${env.WORK_DIR}/*.txt"
                 echo "\033[1;35mArchivos .txt eliminados\033[0m"
             }
         }
@@ -95,10 +111,11 @@ pipeline {
         stage('Comprobar config file') {
             steps {
                 script {
-                    if (fileExists(env.CONFIG_FILE)) {
-                        echo "\033[1;32mEl archivo ${env.CONFIG_FILE} SÍ existe\033[0m"
+                    def ruta = "${env.WORK_DIR}/${env.CONFIG_FILE}"
+                    if (fileExists(ruta)) {
+                        echo "\033[1;32mEl archivo ${ruta} SÍ existe\033[0m"
                     } else {
-                        echo "\033[1;31mEl archivo ${env.CONFIG_FILE} NO existe\033[0m"
+                        echo "\033[1;31mEl archivo ${ruta} NO existe\033[0m"
                     }
                 }
             }
@@ -108,14 +125,14 @@ pipeline {
             steps {
                 script {
                     env.CANTIDAD = sh(
-                        script: 'ls *.txt 2>/dev/null | wc -l',
+                        script: "ls ${env.WORK_DIR}/*.txt 2>/dev/null | wc -l",
                         returnStdout: true
                     ).trim()
                     def cantidad = env.CANTIDAD.toInteger()
 
                     if (cantidad > 0) {
                         echo "\033[1;32mSe encontraron $cantidad archivos .txt, archivando...\033[0m"
-                        archiveArtifacts artifacts: '*.txt'
+                        archiveArtifacts artifacts: "${env.WORK_DIR}/*.txt"
                     } else {
                         echo "\033[1;31mNo hay archivos .txt en el workspace\033[0m"
                     }
