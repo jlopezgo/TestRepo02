@@ -20,19 +20,26 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                deleteDir()
+                checkout scm
+                echo "\033[1;34mBRANCH_NAME = ${GIT_BRANCH}\033[0m"
+            }
+        }
+
         stage('Generar fichero') {
             steps {
-                sh '''
-                    echo "Hola Jenkins" > saludo.txt
-                '''
+                echo "\033[1;34mGenerar fichero saludo.txt\033[0m"
+                sh 'echo "Hola Jenkins" > saludo.txt'
             }
         }
 
         stage('Mostrar contenido') {
             steps {
+                echo "\033[1;34mGenerar fichero datos.txt\033[0m"
                 sh 'echo "Contenido de datos.txt" > datos.txt'
-            }
-            steps {
+                echo "\033[1;34mMostrar contenido de datos.txt\033[0m"
                 sh 'cat datos.txt'
             }
         }
@@ -46,11 +53,10 @@ pipeline {
         stage('Obtener usuario') {
             steps {
                 script {
-                    NOMBRE = sh(script: 'whoami', returnStdout: true).trim()
+                    env.NAME = sh(script: 'whoami', returnStdout: true).trim()
                 }
-            }
-            steps {
-                sh 'echo "' + NOMBRE + '" > nombre.txt'
+                echo "\033[1;34mNombre de usuario obtenido: ${env.NAME}\033[0m"
+                sh 'echo "$env.NAME" > nombre.txt'
             }
         }
 
@@ -60,19 +66,19 @@ pipeline {
                     echo "Archivo uno" > uno.txt
                     echo "Archivo dos" > dos.txt
                     echo "Archivo tres" > tres.txt
+                    ls -l
                 '''
-            }
-            steps {
-                sh 'ls -l'
             }
         }
 
         stage('Deploy') {
             when {
-                branch 'main'
+                //branch 'main'
+                expression { env.GIT_BRANCH ==~ /.*main$/ }
             }
             steps {
-                sh 'echo -e "\033[1;34mDEPLOY ejecutado con rama main\033[0m"'
+                echo "\033[1;34mDEPLOY ejecutado con rama main\033[0m"
+                sh "echo \"Contenido de ${env.CONFIG_FILE}\" > ${env.CONFIG_FILE}"
             }
         }
 
@@ -82,18 +88,18 @@ pipeline {
             }
             steps {
                 sh 'rm -f *.txt'
-                sh 'echo -e "\033[1;34mArchivos .txt eliminados\033[0m"'
+                echo "\033[1;35mArchivos .txt eliminados\033[0m"
             }
         }
 
-        stage('Comprobar $CONFIG_FILE') {
+        stage('Comprobar config file') {
             steps {
                 script {
-                    def exist = 'NO'
-                    if (fileExists($CONFIG_FILE)) {
-                        exist = 'SÍ'
+                    if (fileExists(env.CONFIG_FILE)) {
+                        echo "\033[1;32mEl archivo ${env.CONFIG_FILE} SÍ existe\033[0m"
+                    } else {
+                        echo "\033[1;31mEl archivo ${env.CONFIG_FILE} NO existe\033[0m"
                     }
-                    echo "\033[1;32mEl archivo $CONFIG_FILE $exist existe\033[0m"
                 }
             }
         }
@@ -104,10 +110,11 @@ pipeline {
                     env.CANTIDAD = sh(
                         script: 'ls *.txt 2>/dev/null | wc -l',
                         returnStdout: true
-                    ).trim() as Integer
+                    ).trim()
+                    def cantidad = env.CANTIDAD.toInteger()
 
-                    if (env.CANTIDAD > 0) {
-                        echo "\033[1;32mSe encontraron $env.CANTIDAD archivos .txt, archivando...\033[0m"
+                    if (cantidad > 0) {
+                        echo "\033[1;32mSe encontraron $cantidad archivos .txt, archivando...\033[0m"
                         archiveArtifacts artifacts: '*.txt'
                     } else {
                         echo "\033[1;31mNo hay archivos .txt en el workspace\033[0m"
@@ -119,7 +126,7 @@ pipeline {
 
     post {
         always {
-            sh 'echo "\033[1;32mFinalmente hay $env.CANTIDAD archivos en el workspace\033[0m"'
+            echo "\033[1;35mFinalmente hay ${env.CANTIDAD} archivos en el workspace\033[0m"
         }
     }
 }
