@@ -33,7 +33,7 @@ pipeline {
                     parallel(
 
                         "Procesar datos1.txt": {
-                            echo "\033[1;32m[DATOS1] Procesando ${POOL_DIR}/datos1.txt...\n\033[0m"
+                            echo "\033[1;32m[DATOS1] Procesando ${POOL_DIR}/datos1.txt...\033[0m"
 
                             script {
                                 def contenido = sh(
@@ -41,7 +41,7 @@ pipeline {
                                     returnStdout: true
                                 ).trim()
 
-                                echo "\033[1m${contenido}\n\033[0m"
+                                echo "\033[1m\n${contenido}\n\033[0m"
                             }
 
                             sleep 5
@@ -49,7 +49,7 @@ pipeline {
                         },
 
                         "Procesar datos2.txt": {
-                            echo "\033[1;33m[DATOS2] Procesando ${POOL_DIR}/datos2.txt...\n\033[0m"
+                            echo "\033[1;33m[DATOS2] Procesando ${POOL_DIR}/datos2.txt...\033[0m"
 
                             script {
                                 def contenido = sh(
@@ -57,7 +57,7 @@ pipeline {
                                     returnStdout: true
                                 ).trim()
 
-                                echo "\033[1m${contenido}\n\033[0m"
+                                echo "\033[1m\n${contenido}\n\033[0m"
                             }
 
                             sleep 8
@@ -65,7 +65,7 @@ pipeline {
                         },
 
                         "Procesar datos3.txt": {
-                            echo "\033[1;36m[DATOS3] Procesando ${POOL_DIR}/datos3.txt...\n\033[0m"
+                            echo "\033[1;36m[DATOS3] Procesando ${POOL_DIR}/datos3.txt...\033[0m"
 
                             script {
                                 def contenido = sh(
@@ -73,7 +73,7 @@ pipeline {
                                     returnStdout: true
                                 ).trim()
 
-                                echo "\033[1m${contenido}\n\033[0m"
+                                echo "\033[1m\n${contenido}\n\033[0m"
                             }
 
                             sleep 6
