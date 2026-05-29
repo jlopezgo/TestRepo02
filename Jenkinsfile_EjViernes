@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+
+    options {
+        ansiColor('xterm')
+    }
+
+    stages {
+
+        stage('Inicio') {
+            steps {
+                echo "\033[1;34m[INICIO] Limpiando workspace...\033[0m"
+                deleteDir()   // Limpia el workspace completamente
+
+                echo "\033[1;34m[INICIO] Realizando checkout del repositorio...\033[0m"
+                checkout scm
+            }
+        }
+
+        stage('Preparación') {
+            steps {
+                echo "\033[1;36m[PREPARACIÓN] Preparando entorno...\033[0m"
+                echo "\033[1;36m[PREPARACIÓN] Listando archivos del workspace:\033[0m"
+
+                sh "ls -l"
+            }
+        }
+
+        stage('Procesamiento en paralelo') {
+            parallel {
+
+                "Procesar datos1.txt": {
+                    stage('datos1') {
+                        echo "\033[1;32m[DATOS1] Procesando pool/datos1.txt...\033[0m"
+                        sh "cat pool/datos1.txt"
+                        sleep 5
+                        echo "\033[1;32m[DATOS1] Finalizado procesamiento de datos1.txt\033[0m"
+                    }
+                }
+
+                "Procesar datos2.txt": {
+                    stage('datos2') {
+                        echo "\033[1;33m[DATOS2] Procesando pool/datos2.txt...\033[0m"
+                        sh "cat pool/datos2.txt"
+                        sleep 8
+                        echo "\033[1;33m[DATOS2] Finalizado procesamiento de datos2.txt\033[0m"
+                    }
+                }
+
+                "Procesar datos3.txt": {
+                    stage('datos3') {
+                        echo "\033[1;36m[DATOS3] Procesando pool/datos3.txt...\033[0m"
+                        sh "cat pool/datos3.txt"
+                        sleep 6
+                        echo "\033[1;36m[DATOS3] Finalizado procesamiento de datos3.txt\033[0m"
+                    }
+                }
+
+                // OPCIONAL: Rama que falla
+                "Fallo intencionado": {
+                    stage('fallo') {
+                        echo "\033[1;31m[FALLO] Esta rama fallará intencionadamente...\033[0m"
+                        error("Error provocado para pruebas de parallel")
+                    }
+                }
+            }
+        }
+
+        stage('Resumen') {
+            steps {
+                echo "\033[1;35m[RESUMEN] Procesamiento paralelo completado.\033[0m"
+            }
+        }
+    }
+}
